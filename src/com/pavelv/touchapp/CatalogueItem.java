@@ -86,7 +86,9 @@ public class CatalogueItem extends Activity {
 				
 				Stream.playSong(mp3);
 				
-				play.setVisibility(View.VISIBLE);
+				if (play.getVisibility() != View.VISIBLE) {
+					play.setVisibility(View.VISIBLE);
+				}
 				
 				play.setOnClickListener(new OnClickListener() {
 					@Override

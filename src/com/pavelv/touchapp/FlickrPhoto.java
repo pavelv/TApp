@@ -22,7 +22,7 @@ class FlickrPhoto {
 
 	public String makeURL2() {
 		return "http://farm" + farm + ".static.flickr.com/" + server + "/" + id
-				+ "_" + secret + "_m.jpg";
+				+ "_" + secret + "_b.jpg";
 	}
 	
 	public String makeURL3() {

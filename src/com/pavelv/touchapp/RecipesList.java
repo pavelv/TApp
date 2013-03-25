@@ -93,7 +93,7 @@ public class RecipesList extends ListActivity {
 											"Soups".length())) {
 								map.put("title", "Soups & Starters");
 							}
-						}
+						}					
 						map.put("id", GetXMLMethods.getValue(e, "id"));
 						mylist.add(map);
 					}
@@ -163,8 +163,9 @@ public class RecipesList extends ListActivity {
 		HashMap<String, String> o = (HashMap<String, String>) lv
 				.getItemAtPosition(position);
 		String title = o.get("title").toLowerCase();
-
-		if (title.compareToIgnoreCase("conceptual, historical, literary") == 0) {
+		if (title.compareToIgnoreCase("baby food") == 0) {
+			title = "babyfood";
+		} else if (title.compareToIgnoreCase("conceptual, historical, literary") == 0) {
 			title = "conceptual";
 		} else if (title.compareToIgnoreCase("prison food") == 0) {
 			title = "prisonfood";

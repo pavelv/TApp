@@ -74,7 +74,9 @@ public class RadioItem extends Activity {
 				tv4.setText(Html.fromHtml("<big><b>Streaming</b></big><br /><small>Please wait</small></a>"));
 				Stream.playSong(mp3);
 				
-				play.setVisibility(View.VISIBLE);
+				if (play.getVisibility() != View.VISIBLE) {
+					play.setVisibility(View.VISIBLE);
+				}
 				
 				play.setOnClickListener(new OnClickListener() {
 					@Override

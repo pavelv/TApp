@@ -164,7 +164,7 @@ public class PhotosItem extends Activity {
 						
 						try {
 							
-							in = new java.net.URL(images[position].makeURL3()).openStream();
+							in = new java.net.URL(images[position].makeURL2()).openStream();
 							bm = BitmapFactory.decodeStream(in);
 					        
 						} catch (MalformedURLException e) {
@@ -183,6 +183,7 @@ public class PhotosItem extends Activity {
 							bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
 					        outStream.flush();
 					        outStream.close();
+					        Toast.makeText(PhotosItem.this, "Photo Saved", Toast.LENGTH_SHORT).show();
 						} catch (FileNotFoundException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
