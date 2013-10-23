@@ -1,18 +1,23 @@
 package com.pavelv.touchapp;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Parcelable;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
@@ -20,41 +25,20 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Parcelable;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.Window;
-import android.view.View.OnClickListener;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.SimpleAdapter;
-import android.widget.TabHost;
-import android.widget.Toast;
+import java.io.File;
 
-public class PhotosItem extends Activity {
-	
-	DisplayImageOptions options;
+public class PhotosItem extends Activity implements DownloadPhotoTask.Listener {
+
+    DisplayImageOptions options;
 	protected ImageLoader imageLoader = ImageLoader.getInstance();
 	protected ImageViewPager pager;
 	String url = null;
 	int pagerPosition;
 	int position;
+
+    private AsyncTask downloadPhotoTask;
+
+    private static final String TAG = "PhotosItem";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -83,35 +67,22 @@ public class PhotosItem extends Activity {
 			.build();
 		
 		pager = (ImageViewPager) findViewById(R.id.pager);
-		pager.setAdapter(new ImagePagerAdapter(PhotosList.photos));
-		pager.setCurrentItem(pagerPosition);
-		pager.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				
-				File sdCardDirectory = Environment.getExternalStorageDirectory();
-				File image = new File(sdCardDirectory, "test.png");
-			    FileOutputStream outStream;
-			    try {
-
-			        outStream = new FileOutputStream(image);
-
-					InputStream in = new java.net.URL(url).openStream();
-					Bitmap mIcon11 = BitmapFactory.decodeStream(in);
-					mIcon11.compress(Bitmap.CompressFormat.JPEG, 85, outStream);
-			        
-			        outStream.flush();
-			        outStream.close();
-
-			    } catch (FileNotFoundException e) {
-			        e.printStackTrace();
-			    } catch (IOException e) {
-			        e.printStackTrace();
-			    }
-			}
-		});
+        pager.setAdapter(new ImagePagerAdapter(PhotosList.photos));
+        pager.setCurrentItem(pagerPosition);
 	}
-	
+
+    public boolean hasSDCardMounted() {
+        return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
+    }
+
+    public String getStoragePath() {
+        File storageDir = new File(Environment.getExternalStorageDirectory() + "/TouchPhotos/");
+        if (!storageDir.exists()) {
+            storageDir.mkdir();
+        }
+        return storageDir.getPath();
+    }
+
 	private class ImagePagerAdapter extends PagerAdapter {
 
 		private FlickrPhoto[] images;
@@ -143,63 +114,21 @@ public class PhotosItem extends Activity {
 			final TouchImageView imageView = (TouchImageView) imageLayout.findViewById(R.id.image);
 			final ProgressBar spinner = (ProgressBar) imageLayout.findViewById(R.id.loading);
 			final Button saveImage = (Button) findViewById(R.id.button1);
-			
-			saveImage.setVisibility(View.INVISIBLE);
-			
+
+            saveImage.setVisibility(View.INVISIBLE);
 			saveImage.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
-				
-//				final Handler handler = new Handler();
-
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						
-						File sdCardDirectory = Environment.getExternalStorageDirectory();
-						final File dir = new File (sdCardDirectory.getAbsolutePath() + "/TouchPhotos");
-						dir.mkdirs();
-						InputStream in;
-						Bitmap bm = null;
-						
-						try {
-							
-							in = new java.net.URL(images[position].makeURL2()).openStream();
-							bm = BitmapFactory.decodeStream(in);
-					        
-						} catch (MalformedURLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						File image = new File(dir, System.currentTimeMillis() + ".jpg");
-					    FileOutputStream outStream;
-						
-				        try {
-							outStream = new FileOutputStream(image);
-							bm.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-					        outStream.flush();
-					        outStream.close();
-					        Toast.makeText(PhotosItem.this, "Photo Saved", Toast.LENGTH_SHORT).show();
-						} catch (FileNotFoundException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}).start();
+                    if (hasSDCardMounted()) {
+                        String imageUrl = images[pager.getCurrentItem()].makeURL2();
+                        downloadPhotoTask = new DownloadPhotoTask(PhotosItem.this, PhotosItem.this, getStoragePath()).execute(imageUrl);
+                    }
 				}
 			});
 			
 			imageView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					
 					saveImage.setVisibility(View.VISIBLE);
 				}
 			});
@@ -227,10 +156,8 @@ public class PhotosItem extends Activity {
 					}
 					
 					Toast.makeText(PhotosItem.this, message, Toast.LENGTH_SHORT).show();
-
 					spinner.setVisibility(View.GONE);
 					imageView.setImageResource(R.drawable.photos);
-					
 				}
 
 				@Override
@@ -261,7 +188,18 @@ public class PhotosItem extends Activity {
 		public void startUpdate(View container) {
 		}
 	}
-	
+
+    @Override
+    public void onPhotoDownloadComplete(Integer statusCode) {
+        switch (statusCode) {
+            case DownloadPhotoTask.SUCCESS:
+                Toast.makeText(this, "Photo downloaded", Toast.LENGTH_SHORT).show();
+                Uri uri = Uri.parse("file://" + getStoragePath());
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, uri));
+                break;
+        }
+    }
+
 //	public void onSaveInstanceState(Bundle toSave) {
 //		  super.onSaveInstanceState(toSave);
 //		  toSave.putString("currentTab", TabHost.TabSpec.get getTabHost());
